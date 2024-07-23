@@ -52,7 +52,7 @@ def dR_dt(R,N,param,mat):
             D_s_norma[i] = np.where(sums != 0, D_species[i] / sums, D_species[i])
 
     # vector long n_r with produced chemicals
-    prod = np.sum(np.einsum('ij,ijk->ik', up_eff*R/(1+R)*param['w']*param['l'], D_s_norma),axis=0)/param['w'] 
+    prod = np.sum(np.einsum('ij,ijk->ik', up_eff*N[:, np.newaxis]*R/(1+R)*param['w']*param['l'], D_s_norma),axis=0)/param['w'] 
     
     # resource replenishment
     ext = 1/param['tau']*(param['ext']-R)
@@ -144,7 +144,9 @@ def dN_dt(t,N,R,param,mat):
 
     # sum
     dNdt = N*(growth_vector-1/param['tau_s'])
-    dNdt[np.abs(dNdt)<1e-14]=0
+    dNdt[np.abs(dNdt)<1e-10]=0
+
+    #print(up_eff,growth_vector,dNdt)
 
     return dNdt
 
@@ -225,7 +227,7 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
         dndt = dN(0, N_prev, np.array(R_eq), param, mat)
         if ((np.abs(dndt)<1e-14).all() and i>2):
             break
-        N_out = scipy.integrate.solve_ivp(dN, (0,1), N_prev, method='RK23', args=(np.array(R_eq),param,mat))
+        N_out = scipy.integrate.solve_ivp(dN, (0,0.1), N_prev, method='RK23', args=(np.array(R_eq),param,mat))
         N_out = N_out.y[:, -1]
         N_out[N_out<1e-14]=0
 

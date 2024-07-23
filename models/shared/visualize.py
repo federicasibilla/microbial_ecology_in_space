@@ -374,7 +374,7 @@ def vis_wm(N,R,exe):
     plt.xlabel("Time")
     plt.ylabel("Population")
 
-    colors = plt.cm.tab10.colors  
+    colors = list(plt.cm.tab20.colors) + list(plt.cm.tab20b.colors) + list(plt.cm.tab20c.colors)   
 
     for i in range(N.shape[1]):                                       
         plt.plot(N[:, i], label=f'Species {i+1}', color=colors[i], linewidth=1)
@@ -387,7 +387,7 @@ def vis_wm(N,R,exe):
     plt.close()
 
     # Plot Time Series for Resources
-    plt.figure(figsize=(8, 5))
+    plt.figure(figsize=(10, 7))
     plt.title("Time Series for Resources")
     plt.xlabel("Time")
     plt.ylabel("Concentration")

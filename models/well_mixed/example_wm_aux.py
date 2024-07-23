@@ -1,3 +1,8 @@
+"""
+example_wm_aux.py: file to perform well-mixed simulations of two auxotrophs
+
+"""
+
 import sys
 import os
 import pickle
@@ -33,24 +38,24 @@ m = np.zeros((n_s))
 # no reinsertion of produced chemicals
 ext = np.zeros((n_r))
 ext[0] = 10.
-tau = np.zeros((n_r))+10
+tau = np.zeros((n_r))+100
 
 g = np.array([0.5,1.])
 
 # initial abundance and initial R guess
-N0 =np.array([1.,1.])
+N0 =np.array([0.1,0.1])
 guess = np.array([10,10,10])
 
 # define parameters
 param = {
     # model parameters
-    'w'  : np.ones((n_r)),                             # energy conversion     [energy/mass]
+    'w'  : np.ones((n_r))*10,                          # energy conversion     [energy/mass]
     'l'  : np.ones((n_r))*0.8,                         # leakage               [adim]
     'g'  : g,                                          # growth conv. factors  [1/energy]
     'm'  : m,                                          # maintainance requ.    [energy/time]
     'ext': ext,                                        # external replenishment  
     'tau' : tau,                                       # chemicals dilution                             
-    'tau_s': 10,                                       # species dilution
+    'tau_s': 100,                                      # species dilution
     'guess_wm': guess                                  # initial resources guess
 }
 
@@ -63,7 +68,7 @@ mat = {
     'sign'    : sign_mat
 }
 
-N_fin,R_fin=run_wellmixed(N0,param,mat,dR_dt,dN_dt,1000)
+N_fin,R_fin=run_wellmixed(N0,param,mat,dR_dt,dN_dt,20000)
 
 sums = np.sum(N_fin, axis=1)[-1]
 final_fraction = np.where(sums == 0, 0, N_fin[-1] / (sums+1e-15))
@@ -71,4 +76,4 @@ print('final_fraction: ', final_fraction)
 
 print('final_abundances: ', N_fin[-1], R_fin[-1])
 
-vis_wm(N_fin,R_fin,results_dir)
+vis_wm(N_fin,R_fin[1:],results_dir)
