@@ -21,6 +21,7 @@ from numpy import random
 # underlying grids of equilibrium concentrations
 
 def growth_rates(R, N, param, mat):
+
     """
     Calculate growth rates of each individual and modulate growth based on limiting nutrients.
     
@@ -32,6 +33,7 @@ def growth_rates(R, N, param, mat):
     RETURNS:
     - growth_matrix: matrix, nxn, growth rates of each individual
     - mod:           matrix, nxnx2, first layer is mu, second layer is limiting nutrient index
+    
     """
     
     n, _, n_r = R.shape
@@ -66,7 +68,8 @@ def growth_rates(R, N, param, mat):
     for i in range(n_s):
         realized_met = mat['met'] * mat['spec_met'][i][:, np.newaxis]
         l = param['l'].copy()
-        l[np.sum(realized_met, axis=0) == 0] = 0
+        # leakage adjusted to zero if nothing is produced
+        l[np.sum(realized_met, axis=1) == 0] = 0
 
         species_i_matrix = N[:, :, i]
         growth_matrix += species_i_matrix * param['g'][i] * (
@@ -80,6 +83,7 @@ def growth_rates(R, N, param, mat):
 # define death_birth(state,G) the rule of update of a single step of the automaton in the PBC case
 
 def death_birth_periodic(state, G):
+
     """
     Perform death and birth process on the grid.
 
@@ -90,6 +94,7 @@ def death_birth_periodic(state, G):
     - state:    matrix, nxn, updated grid (decoded)
     - ancora:   string, 'vittoria' if one species has won, 'ancora' if there are more than 1 species present
     - max_spec: int, identity of the most present species
+
     """
 
     n = state.shape[0]

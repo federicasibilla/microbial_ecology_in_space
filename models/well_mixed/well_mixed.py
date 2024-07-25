@@ -227,7 +227,7 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
         dndt = dN(0, N_prev, np.array(R_eq), param, mat)
         if ((np.abs(dndt)<1e-14).all() and i>2):
             break
-        N_out = scipy.integrate.solve_ivp(dN, (0,0.1), N_prev, method='RK23', args=(np.array(R_eq),param,mat))
+        N_out = scipy.integrate.solve_ivp(dN, (0,0.01), N_prev, method='RK23', args=(np.array(R_eq),param,mat))
         N_out = N_out.y[:, -1]
         N_out[N_out<1e-14]=0
 

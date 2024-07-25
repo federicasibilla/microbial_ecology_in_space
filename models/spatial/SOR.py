@@ -57,7 +57,7 @@ def SOR_2D(N, param, mat, source, initial_guess):
     t0 = time()
 
     # SOR algorithm, convergence condition based on update relative to current absolute value
-    while ((delta_list[-1]>best_BC[1:n+1,1:n+1,:]*stop).any()):
+    while (True):
 
         current_source, up , prod = source(best_BC[1:n+1,1:n+1,:],N,param,mat)
 
@@ -75,7 +75,7 @@ def SOR_2D(N, param, mat, source, initial_guess):
         delta[i_black-1,j_black-1,:] = 0.25*(best_BC[i_black,j_black+1,:]+best_BC[i_black,j_black-1,:]+best_BC[i_black+1,j_black,:]+best_BC[i_black-1,j_black,:]+(h**2/D)*current_source[i_black-1,j_black-1,:])-best_BC[i_black,j_black,:] 
         best_BC[i_black,j_black] += param['sor']*delta[i_black-1,j_black-1]
 
-        if (delta[1:-1,1:-1]/(best_BC[2:n,2:n]+1e-12)<=0.001).all():
+        if (delta[1:-1,1:-1]/(best_BC[2:n,2:n]+1e-12)<=stop).all():
                 break
 
         # extract biggest update
@@ -137,7 +137,7 @@ def SOR_3D(N, param, mat, source, initial_guess):
     t0 = time()
 
     # SOR algorithm, convergence condition based on update relative to current absolute value
-    while ((delta_list[-1]>padded_R[:,:,1,:]*stop).any()):
+    while (True):
 
         # periodic BC in middle layer
         padded_R[0,1:n+1,1,:]=padded_R[-2,1:n+1,1,:]
@@ -175,7 +175,7 @@ def SOR_3D(N, param, mat, source, initial_guess):
                                    +(h**3/D)*padded_source[i_black,j_black,1,:])-padded_R[i_black,j_black,1,:]
         padded_R[i_black,j_black,1,:] += param['sor']*delta[i_black-1,j_black-1]
 
-        if (delta[1:-1,1:-1]/(padded_R[2:n,2:n,1]+1e-12)<=0.001).all():
+        if (delta[1:-1,1:-1]/(padded_R[2:n,2:n,1]+1e-12)<=stop).all():
                 break
 
         # extract biggest update

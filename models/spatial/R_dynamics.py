@@ -36,12 +36,12 @@ def f(R, N, param, mat):
     l_w = param['l'] * param['w']
     met_transposed = mat['met'].T
     
-    # Compute met_grid without explicit tiling
+    # Compute met_grid 
     met_grid = met_transposed[np.newaxis, np.newaxis, :, :] * spec_met_species[:, :, np.newaxis, :]
     
     # Sum along the met_dim axis
     col_sums = np.sum(met_grid, axis=-2, keepdims=True)
-    col_sums[col_sums == 0] = 1e-10  # Avoid division by zero
+    col_sums[col_sums == 0] = 1e-13  # Avoid division by zero
     
     met_grid_normalized = met_grid / col_sums
     
