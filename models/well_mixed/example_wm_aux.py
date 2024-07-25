@@ -68,7 +68,7 @@ mat = {
     'sign'    : sign_mat
 }
 
-N_fin,R_fin=run_wellmixed(N0,param,mat,dR_dt,dN_dt,20000)
+N_fin,R_fin=run_wellmixed(N0,param,mat,dR_dt,dN_dt,10000)
 
 sums = np.sum(N_fin, axis=1)[-1]
 final_fraction = np.where(sums == 0, 0, N_fin[-1] / (sums+1e-15))
