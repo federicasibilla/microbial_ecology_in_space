@@ -353,7 +353,7 @@ def vis_abundances(ab_list, s_list, exe):
 #------------------------------------------------------------------------------------------------
 # visualize well mixed time series
 
-def vis_wm(N,R,exe):
+def vis_wm(N, R, exe):
 
     """
     N: list of vectors, n_s, species abundances
@@ -365,24 +365,44 @@ def vis_wm(N,R,exe):
     """
 
     # plotting path and saving name
-    plot_path = os.path.join( exe + '/wmN.png')
-    plot_path_R = os.path.join( exe + '/wmR.png')
+    plot_path = os.path.join(exe, 'wmN.png')
+    plot_path_R = os.path.join(exe, 'wmR.png')
+
+    # Create directory if it does not exist
+    os.makedirs(os.path.dirname(plot_path), exist_ok=True)
+    os.makedirs(os.path.dirname(plot_path_R), exist_ok=True)
 
     # Plot Time Series for Species
-    plt.figure(figsize=(8, 5))
-    plt.title("Time Series for Species")
-    plt.xlabel("Time")
-    plt.ylabel("Population")
+    fig, axs = plt.subplots(1, 2, figsize=(16, 5))
 
-    colors = list(plt.cm.tab20.colors) + list(plt.cm.tab20b.colors) + list(plt.cm.tab20c.colors)   
+    # Absolute abundances
+    axs[0].set_title("Time Series for Species (Absolute)")
+    axs[0].set_xlabel("Time")
+    axs[0].set_ylabel("Population")
 
-    for i in range(N.shape[1]):                                       
-        plt.plot(N[:, i], label=f'Species {i+1}', color=colors[i], linewidth=1)
+    colors = ['blue','orange'] + list(plt.cm.tab20b.colors) + list(plt.cm.tab20c.colors)+list(plt.cm.tab20.colors)
 
-    plt.legend()
-    plt.grid(True)  
-    plt.tight_layout()  
-    os.makedirs(os.path.dirname(plot_path), exist_ok=True)
+    for i in range(N.shape[1]):
+        axs[0].plot(N[:, i], label=f'Species {i+1}', color=colors[i], linewidth=1)
+
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # Fractional abundances
+    axs[1].set_title("Time Series for Species (Fractional)")
+    axs[1].set_xlabel("Time")
+    axs[1].set_ylabel("Fraction of Total Population")
+
+    total_population = np.sum(N, axis=1, keepdims=True)
+    fractional_abundance = np.divide(N, total_population, where=total_population!=0)
+
+    for i in range(N.shape[1]):
+        axs[1].plot(fractional_abundance[:, i], label=f'Species {i+1}', color=colors[i], linewidth=1)
+
+    axs[1].legend()
+    axs[1].grid(True)
+
+    plt.tight_layout()
     plt.savefig(plot_path)
     plt.close()
 
@@ -392,13 +412,12 @@ def vis_wm(N,R,exe):
     plt.xlabel("Time")
     plt.ylabel("Concentration")
 
-    for i in range(R.shape[1]):                                       
-      plt.plot(R[:, i], label=f'Resource {i+1}', color=colors[i], linewidth=1)
+    for i in range(R.shape[1]):
+        plt.plot(R[:, i], label=f'Resource {i+1}', color=colors[i], linewidth=1)
 
     plt.legend()
-    plt.grid(True)  
-    plt.tight_layout()  
-    os.makedirs(os.path.dirname(plot_path_R), exist_ok=True)
+    plt.grid(True)
+    plt.tight_layout()
     plt.savefig(plot_path_R)
     plt.close()
 
