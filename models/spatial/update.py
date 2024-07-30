@@ -3,6 +3,7 @@ update.py: file containing the functions to run the simulations with given condi
 
 CONTAINS: - simulate_3D: function to run a simulation using the SOR_3D algorithm for PBC
           - simulate_2D: function to run a simulation using the SOR_3D algorithm for PBC
+          - simulate_MG: function to perform multi-grid iteration
           - shannon:     function to calculate shannon diversity in real time to check for convergence
           - abundances:  function to compute relative abundance of a frame
           - change_grid_R/N: functions for the multigrid solver, to change grids 

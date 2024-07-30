@@ -1,5 +1,5 @@
 """
-auxotrophs simulation 
+example_test_space.py: file to perform first few steps of spatial simulation with 8 species, 25 reaources
 
 """
 
@@ -138,7 +138,7 @@ with open(f"{output_dir}/parameters.txt", 'w') as file:
     for key, value in mat.items():
         file.write(f"{key}:\n{value}\n\n")
 
-last_2_frames_N, mod, current_R, current_N, g_rates, s_list, abundances = simulate_2D(10, f, R_space_ig, N0_space, param, mat)
+last_2_frames_N, mod, current_R, current_N, g_rates, s_list, abundances = simulate_3D(10, f, R_space_ig, N0_space, param, mat)
 
 # save results as csv
 np.save(f'{output_dir}/R_fin.npz', current_R)

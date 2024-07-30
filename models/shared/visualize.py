@@ -257,7 +257,7 @@ def vispreferences(mat,exe):
 
     up_mat = mat['uptake']*mat['sign']
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 8))
 
     colors = list(plt.cm.tab20.colors) + list(plt.cm.tab20b.colors) + list(plt.cm.tab20c.colors) 
 
@@ -270,19 +270,19 @@ def vispreferences(mat,exe):
             lunghezza_segmento = up_mat[i, j]  
             if (lunghezza_segmento>=0):
                 if legend<up_mat.shape[1]:
-                    plt.bar(i, lunghezza_segmento, bottom=offset, width=0.8, color=colors[j], label=f'Res {j+1}')
+                    plt.bar(i+1, lunghezza_segmento, bottom=offset, width=0.8, color=colors[j], label=f'Res {j+1}')
                     offset += lunghezza_segmento
                     legend +=1
                 else:
-                    plt.bar(i, lunghezza_segmento, bottom=offset, width=0.8, color=colors[j])
+                    plt.bar(i+1, lunghezza_segmento, bottom=offset, width=0.8, color=colors[j])
                     offset += lunghezza_segmento
             else:
                 if legend<up_mat.shape[1]:
-                    plt.bar(i, lunghezza_segmento, bottom=offset_neg, width=0.8, color=colors[j], label=f'Res {j+1}')
+                    plt.bar(i+1, lunghezza_segmento, bottom=offset_neg, width=0.8, color=colors[j], label=f'Res {j+1}')
                     offset_neg += lunghezza_segmento
                     legend +=1
                 else:
-                    plt.bar(i, lunghezza_segmento, bottom=offset_neg, width=0.8, color=colors[j])
+                    plt.bar(i+1, lunghezza_segmento, bottom=offset_neg, width=0.8, color=colors[j])
                     offset_neg += lunghezza_segmento
 
 
@@ -380,7 +380,7 @@ def vis_wm(N, R, exe):
     axs[0].set_xlabel("Time")
     axs[0].set_ylabel("Population")
 
-    colors = ['blue','orange'] + list(plt.cm.tab20b.colors) + list(plt.cm.tab20c.colors)+list(plt.cm.tab20.colors)
+    colors = list(plt.cm.tab20.colors) + list(plt.cm.tab20b.colors) + list(plt.cm.tab20c.colors)
 
     for i in range(N.shape[1]):
         axs[0].plot(N[:, i], label=f'Species {i+1}', color=colors[i], linewidth=1)

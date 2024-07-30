@@ -3,6 +3,7 @@ well_mixed.py: file to store definition of the well-mixed model
 
 CONTAINS: - dR_dt: function storing the dynamics of resources
           - dR_dt_linear: function storing the dynamics of resources, when linear
+          - dR_dt_nomod: function with R dynamics with uptake not regulated by auxotrophies
           - dN_dt: function storing the dynamics of species
           - dN_dt_linear: function storing the dynamics of species, when linear
           - run_wellmixed: function to run the well-mixed simulation
@@ -14,7 +15,7 @@ import scipy
 
 
 #-------------------------------------------------------------------------------------------------------------------
-# define chemicals dynamics
+# define chemicals dynamics, monod+uptake aux modulation
 
 def dR_dt(R,N,param,mat):
 
@@ -65,7 +66,7 @@ def dR_dt(R,N,param,mat):
 
 
 #-------------------------------------------------------------------------------------------------------------------
-# define chemicals dynamics
+# define chemicals dynamics, without auxotrophies modulation on uptake
 
 def dR_dt_nomod(R,N,param,mat):
 
@@ -186,11 +187,9 @@ def dN_dt(t,N,R,param,mat):
     # effect of resources
     growth_vector = param['g']*(np.sum(param['w']*(1-param['l'])*up_eff*mat['sign']*R/(1+R),axis=1)-param['m']) 
 
-    # sum
+    # sum (remember to take dilution away if no species chemostat)
     dNdt = N*(growth_vector-1/param['tau_s'])
     dNdt[np.abs(dNdt)<1e-10]=0
-
-    #print(up_eff,growth_vector,dNdt)
 
     return dNdt
 
@@ -284,6 +283,7 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
 
         i +=1
 
+        # stop simulation when fractional abundances converge
         frac_new = N_out/np.sum(N_out)
         if (np.abs(frac_new-frac_prev)<1e-6).all():
             break
