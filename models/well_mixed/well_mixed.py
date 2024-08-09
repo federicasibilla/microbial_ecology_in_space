@@ -11,7 +11,7 @@ CONTAINS: - dR_dt: function storing the dynamics of resources
 """
 
 import numpy as np
-import scipy
+from scipy import optimize, integrate
 
 
 #-------------------------------------------------------------------------------------------------------------------
@@ -185,10 +185,10 @@ def dN_dt(t,N,R,param,mat):
             up_eff[i,lim]=mat['uptake'][i,lim] # restore uptake of the limiting one to max
 
     # effect of resources
-    growth_vector = param['g']*(np.sum(param['w']*(1-param['l'])*up_eff*mat['sign']*R/(1+R),axis=1)-param['m']) 
+    growth_vector = param['g']*(np.sum(param['w']*(1-param['l'])*up_eff*mat['sign']*R/(1+R),axis=1)) 
 
     # sum (remember to take dilution away if no species chemostat)
-    dNdt = N*(growth_vector-1/param['tau_s'])
+    dNdt = N*(growth_vector-param['m'])
     dNdt[np.abs(dNdt)<1e-10]=0
 
     return dNdt
@@ -248,11 +248,13 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
     guess = param['guess_wm']
     N = [N0.copy()]
     R = [guess]
+    dNdt = []
 
     N_prev = N0
     frac_prev = N0/np.sum(N0)
 
     i = 0
+    j = 0
  
     while(True):
 
@@ -263,17 +265,24 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
         if (np.abs(drdt)<1e-14).all():
             R_eq = R[-1]
         else:
-            R_eq = scipy.optimize.least_squares(dR, guess, args=(N_prev,param,mat),bounds=(0,np.inf)).x
+            R_eq = optimize.least_squares(dR, guess, args=(N_prev,param,mat),bounds=(0,np.inf)).x
             R_eq[R_eq<1e-14]=0
 
         
         # integrate N one step
         dndt = dN(0, N_prev, np.array(R_eq), param, mat)
+        dNdt.append(dndt)
         if ((np.abs(dndt)<1e-14).all() and i>2):
             break
-        N_out = scipy.integrate.solve_ivp(dN, (0,0.1), N_prev, method='RK23', args=(np.array(R_eq),param,mat))
+        N_out = integrate.solve_ivp(dN, (0,0.001), N_prev, method='RK23', args=(np.array(R_eq),param,mat))
         N_out = N_out.y[:, -1]
         N_out[N_out<1e-14]=0
+
+        # stop simulation if real abundances converge (after 1000 steps)
+        if (np.abs(N_prev-N_out)<1e-6).all() and i>1000:
+            j +=1
+        if j>5000:
+            break
 
         N_prev = N_out
         guess = R_eq
@@ -284,14 +293,16 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
         i +=1
 
         # stop simulation when fractional abundances converge
-        frac_new = N_out/np.sum(N_out)
-        if (np.abs(frac_new-frac_prev)<1e-6).all():
-            break
-        frac_prev = frac_new.copy()
+        #frac_new = N_out/np.sum(N_out)
+        #if (np.abs(frac_new-frac_prev)<1e-8).all() and i >1000:
+        #    j += 1
+        #if j>10000:
+        #    break
+        #frac_prev = frac_new.copy()
 
         if i>maxiter:
             break
 
     N, R = np.array(N),np.array(R)
 
-    return N,R
+    return N,R,dNdt
