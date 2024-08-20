@@ -157,9 +157,9 @@ def SOR_3D(N, param, mat, source, initial_guess):
         i_black, j_black = i[checkerboard == 1], j[checkerboard == 1]
 
         # red dots update
-        delta[i_red-1,j_red-1,:] = 1/(4+rapp*2)*(padded_R[i_red,j_red+1,1,:]+padded_R[i_red,j_red-1,1,:]+padded_R[i_red+1,j_red,1,:]+padded_R[i_red-1,j_red,1,:]
-                                   +rapp*(padded_R[i_red,j_red,0,:]+padded_R[i_red,j_red,2,:])
-                                   +(h**3/D)*padded_source[i_red,j_red,1,:])-padded_R[i_red,j_red,1,:]
+        delta[i_red-1,j_red-1,:] = (1/(4+rapp*2*h))*(padded_R[i_red,j_red+1,1,:]+padded_R[i_red,j_red-1,1,:]+padded_R[i_red+1,j_red,1,:]+padded_R[i_red-1,j_red,1,:]
+                                   +rapp*h*(padded_R[i_red,j_red,0,:]+padded_R[i_red,j_red,2,:])
+                                   +(h**2/D)*padded_source[i_red,j_red,1,:])-padded_R[i_red,j_red,1,:]
         padded_R[i_red,j_red,1,:] += param['sor']*delta[i_red-1,j_red-1]
 
         # repeat PBC
@@ -170,9 +170,9 @@ def SOR_3D(N, param, mat, source, initial_guess):
         padded_R[1:n+1,-1,1,:]=padded_R[1:n+1,1,1,:]
 
         # black dots update
-        delta[i_black-1,j_black-1,:] = 1/(4+rapp*2)*(padded_R[i_black,j_black+1,1,:]+padded_R[i_black,j_black-1,1,:]+padded_R[i_black+1,j_black,1,:]+padded_R[i_black-1,j_black,1,:]
-                                   +rapp*(padded_R[i_black,j_black,0,:]+padded_R[i_black,j_black,2,:])
-                                   +(h**3/D)*padded_source[i_black,j_black,1,:])-padded_R[i_black,j_black,1,:]
+        delta[i_black-1,j_black-1,:] = (1/(4+rapp*2*h))*(padded_R[i_black,j_black+1,1,:]+padded_R[i_black,j_black-1,1,:]+padded_R[i_black+1,j_black,1,:]+padded_R[i_black-1,j_black,1,:]
+                                   +rapp*h*(padded_R[i_black,j_black,0,:]+padded_R[i_black,j_black,2,:])
+                                   +(h**2/D)*padded_source[i_black,j_black,1,:])-padded_R[i_black,j_black,1,:]
         padded_R[i_black,j_black,1,:] += param['sor']*delta[i_black-1,j_black-1]
 
         if (delta[1:-1,1:-1]/(padded_R[2:n,2:n,1]+1e-12)<=stop).all():

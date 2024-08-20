@@ -305,4 +305,4 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
 
     N, R = np.array(N),np.array(R)
 
-    return N,R,dNdt
+    return N,R
