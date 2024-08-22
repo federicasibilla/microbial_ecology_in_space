@@ -300,7 +300,6 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
     guess = param['guess_wm']
     N = [N0.copy()]
     R = [guess]
-    dNdt = []
 
     N_prev = N0
     frac_prev = N0/np.sum(N0)
@@ -323,7 +322,6 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
         
         # integrate N one step
         dndt = dN(0, N_prev, np.array(R_eq), param, mat)
-        dNdt.append(drdt)
         if ((np.abs(dndt)<1e-14).all() and i>2):
             break
         N_out = integrate.solve_ivp(dN, (0,0.001), N_prev, method='LSODA', args=(np.array(R_eq),param,mat))
@@ -357,4 +355,4 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
 
     N, R = np.array(N),np.array(R)
 
-    return N,R,dNdt
+    return N,R

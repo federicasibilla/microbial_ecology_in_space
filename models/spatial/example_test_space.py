@@ -42,15 +42,17 @@ os.makedirs(output_dir, exist_ok=True)
 
 
 # initialize R0
-n_r = 25
+n_r = 8
 n_s = 8
 n   = 100
+
+np.random.seed(22)
 
 # drawing uptake matrix from binary distribution
 up_mat = np.zeros((n_s,n_r))
 # each species has a given number of preferred resources
 for i in range(n_s):
-    ones_indices = np.random.choice(n_r, 5, replace=False)
+    ones_indices = np.random.choice(n_r, 3, replace=False)
     up_mat[i, ones_indices] = 0.001
 # check that someone eats primary source
 if (up_mat[:,0] == 0).all():
@@ -107,9 +109,9 @@ param = {
     # sor algorithm parameters
     'n'  : n,                                          # grid points in each dim
     'sor': 1.55,                                       # relaxation parameter
-    'L'  : 100.,                                       # grid true size        [length]
-    'D'  : 1,                                          # diffusion constant    [area/time] 
-    'rapp': 0.01,                                      # ration between Dz and Dxy
+    'L'  : 40,                                         # grid true size        [length]
+    'D'  : 10,                                         # diffusion constant    [area/time] 
+    'Dz' : 0.1,                                        # ration between Dz and Dxy
     'acc': 1e-3,                                       # maximum accepted stopping criterion 
 }
 
@@ -138,7 +140,7 @@ with open(f"{output_dir}/parameters.txt", 'w') as file:
     for key, value in mat.items():
         file.write(f"{key}:\n{value}\n\n")
 
-last_2_frames_N, mod, current_R, current_N, g_rates, s_list, abundances = simulate_3D(10, f, R_space_ig, N0_space, param, mat)
+last_2_frames_N, mod, current_R, current_N, g_rates, s_list, abundances = simulate_MG(10, f, R_space_ig, N0_space, param, mat, 4)
 
 # save results as csv
 np.save(f'{output_dir}/R_fin.npz', current_R)

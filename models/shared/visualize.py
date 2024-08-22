@@ -205,7 +205,7 @@ def G_ongrid(G,N,exe):
 # define makenet(met_matrix) to visualize the metabolic processes network, with
 # resources as nodes and allocation magnitude as edges thikness
 
-def makenet(met_matrix,exe):
+def makenet(met_matrix, exe):
 
     """
     met_matrix: matrix, n_rxn_r, with resources as rows and columns and allocation rates as
@@ -213,18 +213,18 @@ def makenet(met_matrix,exe):
     exe: string, name of executable file
 
     RETURNS the graph of metabolic allocations
-
     """
 
     # plotting path and saving name
-    plot_path = os.path.join(exe + '/met_net.png')
+    plot_path = os.path.join(exe, 'met_net.png')
     os.makedirs(os.path.dirname(plot_path), exist_ok=True)
 
     G = nx.DiGraph()
 
     for i in range(met_matrix.shape[0]):
         for j in range(met_matrix.shape[1]):
-            G.add_edge(f"Res{j+1}", f"Res{i+1}", weight=met_matrix[i, j])
+            if met_matrix[i, j] > 0:  # Only add an edge if the weight is non-zero
+                G.add_edge(f"Res{j+1}", f"Res{i+1}", weight=met_matrix[i, j])
 
     # draw graph
     agraph = to_agraph(G)

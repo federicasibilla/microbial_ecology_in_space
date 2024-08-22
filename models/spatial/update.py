@@ -278,9 +278,10 @@ def simulate_MG(steps, source, initial_guess, initial_N, param, mat, t):
     # computing equilibrium concentration at ztep zero
     current_R, _, _ = SOR_3D(initial_N, param, mat, source, initial_guess)
 
-    # refine result
+    # first refinement
     finer_R, finer_up, finer_prod = SOR_3D(change_grid_N(initial_N,n*2), param, mat, source, change_grid_R(current_R,n*2))
-    for ref in range(3,t+1):
+    # subsequent refinements
+    for ref in range(3,t+2):
         m = n*ref
         finer_R, finer_up, finer_prod = SOR_3D(change_grid_N(initial_N,m), param, mat, source, change_grid_R(finer_R,m))
     coarser_R = change_grid_R(finer_R,n)
