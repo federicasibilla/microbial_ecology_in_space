@@ -105,6 +105,7 @@ param = {
     'ext': R0_wm,                                      # used for 2D and wm   
     'tau' : tau,                                       # chemicals dilution                             
     'tau_s': 1.,                                       # species dilution
+    'bb' : 2,                                          # index of the first building block +1
 
     # sor algorithm parameters
     'n'  : n,                                          # grid points in each dim
@@ -140,7 +141,7 @@ with open(f"{output_dir}/parameters.txt", 'w') as file:
     for key, value in mat.items():
         file.write(f"{key}:\n{value}\n\n")
 
-last_2_frames_N, mod, current_R, current_N, g_rates, s_list, abundances = simulate_MG(10, f, R_space_ig, N0_space, param, mat, 4)
+last_2_frames_N, mod, current_R, current_N, g_rates, s_list, abundances = simulate_3D_maslov(10, f_maslov, R_space_ig, N0_space, param, mat)
 
 # save results as csv
 np.save(f'{output_dir}/R_fin.npz', current_R)

@@ -4,6 +4,7 @@ N_dynamics.py: file containing the functions related to the population grid and 
 
 CONTAINS: - growth_rates: the function to compute growth rates starting from equilibrium R and
             the state vector of the population grid
+          - growth_rates_maslov: same but with Maslov-like regulation on uptake 
           - death_birth_periodic: update rule for one automaton step in PBC case
           - death_birth_periodic: update rule for one automaton step in DBC case
           - encode: function to one hot encode species matrix
@@ -77,6 +78,66 @@ def growth_rates(R, N, param, mat):
         )
         
     return growth_matrix, mod
+
+#-------------------------------------------------------------------------------------------------
+# growth_rates(R,N,param) function to calculate the growth rates of each individual
+# assuming leakage is modulated by Liebig's law of minimum
+
+def growth_rates_maslov(R, N, param, mat):
+
+    """
+    Calculate growth rates of each individual and modulate growth based on limiting nutrients.
+    
+    R:     matrix, nxnxn_r, state of resources
+    N:     matrix, nxnxn_s, state of population
+    param: dictionary, parameters
+    mat:   dictionary, matrices
+
+    RETURNS:
+    - growth_matrix: matrix, nxn, growth rates of each individual
+    - mod:           matrix, nxnx2, first layer is mu, second layer is limiting nutrient index
+    
+    """
+    
+    n, _, n_r = R.shape
+    n_s = N.shape[2]
+    
+    species = np.argmax(N, axis=2)
+    growth_matrix = np.zeros((n, n))
+
+    # Identify auxotrophies on the grid
+    mask = (mat['ess'][species] != 0).astype(int)
+    
+    # Calculate Michaelis-Menten at each site and mask for essential resources
+    upp = R / (R + 1)
+    up_ess = np.where(mask == 0, 1, upp)
+    
+    # Find limiting nutrient and calculate corresponding mu modulation
+    lim = np.argmin(up_ess, axis=2)
+    mu_lim = np.min(up_ess, axis=2)
+    
+    # Create modulation mask
+    mu = np.ones_like(R) * mu_lim[:, :, np.newaxis]
+    mu[np.arange(n)[:, None], np.arange(n), lim] = 1
+    leakage = param['l']*mu + (1-mu) 
+
+    # Modulation matrix
+    mod = np.zeros((n, n, 2))
+    mod[:, :, 0] = mu_lim
+    mod[:, :, 1] = lim
+    
+    # Modulate uptake and insert uptake rates
+    uptake = upp * mat['uptake'][species]
+
+    for i in range(n_s):
+
+        species_i_matrix = N[:, :, i]
+        growth_matrix += species_i_matrix * param['g'][i] * (
+            np.sum(uptake * (1 - leakage) * mat['sign'][i] - param['m'][i], axis=2)
+        )
+        
+    return growth_matrix, mod
+
 
 
 #-------------------------------------------------------------------------------------------------

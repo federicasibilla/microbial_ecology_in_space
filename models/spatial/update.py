@@ -2,6 +2,7 @@
 update.py: file containing the functions to run the simulations with given conditions
 
 CONTAINS: - simulate_3D: function to run a simulation using the SOR_3D algorithm for PBC
+          - simulate_3D_maslov: function to run a simulation using the SOR_3D algorithm for PBC and maslov modulation
           - simulate_2D: function to run a simulation using the SOR_3D algorithm for PBC
           - simulate_MG: function to perform multi-grid iteration
           - shannon:     function to calculate shannon diversity in real time to check for convergence
@@ -11,6 +12,7 @@ CONTAINS: - simulate_3D: function to run a simulation using the SOR_3D algorithm
 """
 
 import numpy as np
+import numba
 
 from time import time
 from scipy.interpolate import RegularGridInterpolator
@@ -125,6 +127,111 @@ def simulate_3D(steps, source, initial_guess, initial_N, param, mat):
     print(f'\n Time taken to solve for {steps} steps: ', round((t1-t0)/60,4), ' minutes \n')
 
     return last_2_frames_N, mod, current_R, current_N, g_rates, s_list, abundances   
+
+#---------------------------------------------------------------------------------------------
+# simulate_3D: functiln to run a simulation with PBC, in a quasi-3D setting
+
+def simulate_3D_maslov(steps, source, initial_guess, initial_N, param, mat):
+
+    """
+    steps:         int, number of steps we want to run the simulation for
+    source:        function, (*args: R,N,param,mat; out: nxn source matrix), reaction in RD equation
+    initial_guess: matrix, nxnxn_r, initial guess for eq. concentrations
+    initial_N:     matrix, nxnxn_s, initial composition of species grid
+    param:         dictionary, parameters
+    mat:           dictionary, matrices
+
+    RETURNS frames_N:  list, all the frames of the population grid, in a decoded species matrix form
+            frames_R:  list, all the frames of the chemicals grid
+            frames_up: list, all the frames of the chemicals grid for uptake
+            frames_in: list, all the frames of the chemicals grid for the production
+            frames_mu: list, all the frames of the liminting modulation of the growth matrix 
+            current_R: matrix, nxnxn_r, final configuration of nutrients grid
+            current_N: matrix, nxnxn_s, final configuration of population grid
+            g_rates:   matrix, nxn, final growth rates
+            s_list:    list, time series of shannon diversity
+
+    """
+
+    # start timing simulation
+    t0 = time()
+
+    # extract list of all possible species
+    n_s = len(param['g'])
+    all_species = list(range(n_s))
+
+    # lists to store time steps 
+    last_2_frames_N  = [decode(initial_N)] 
+    abundances = [calc_abundances(initial_N)]
+    s_list = [shannon(initial_N)]
+
+    # first iteration
+    print('Solving iteration zero, finding equilibrium from initial guess')
+
+    # computing equilibrium concentration at ztep zero
+    current_R, _, _ = SOR_3D(initial_N, param, mat, source, initial_guess)
+    # computing growth rates on all the grid
+    g_rates, mod  = growth_rates_maslov(current_R,initial_N,param,mat)
+    # performing DB dynamics
+    decoded_N, check, most_present = death_birth_periodic(decode(initial_N),g_rates)
+    current_N = encode(decoded_N, all_species)
+
+    # store time step
+    last_2_frames_N.append(decoded_N)
+    abundances.append(calc_abundances(current_N))
+
+    convergence_count = 0
+
+    for i in range(steps):
+
+        print("Step %i" % (i+1))
+
+        # compute new equilibrium, initial guess is previous equilibrium
+        current_R, _, _ = SOR_3D(current_N, param, mat, source, current_R)
+
+        # compute growth rates
+        g_rates, mod  = growth_rates_maslov(current_R,current_N,param,mat)
+        # performe DB dynamics
+        decoded_N,check,most_present = death_birth_periodic(decode(current_N),g_rates)
+        # check that there is more than one species
+        if check == 'vittoria':
+            print('winner species is: ', most_present)
+            break
+
+        current_N = encode(decoded_N, all_species)
+
+        # save time step
+        last_2_frames_N  = [last_2_frames_N[1], decoded_N]
+        abundances.append(calc_abundances(current_N))
+
+        # check if shannon diversity has converged
+        s = shannon(current_N)
+        s_list.append(s)
+
+        if len(s_list)>1000:
+            recent_abundances = np.array(abundances[-300:])  # average of last 300 time steps
+            avg = np.mean(recent_abundances, axis=0) 
+            dev = np.std(recent_abundances, axis=0)
+
+            converged = np.all(np.abs(abundances[-1] - avg) < dev)
+
+            if converged:
+                convergence_count += 1
+            else:
+                convergence_count = 0
+            if convergence_count > 500:
+                print('Abundances have converged for all species')
+                break
+
+        t1 = time()
+        if round((t1-t0)/60,4)>1670:
+            break
+
+    # end timing
+    t1 = time()
+    print(f'\n Time taken to solve for {steps} steps: ', round((t1-t0)/60,4), ' minutes \n')
+
+    return last_2_frames_N, mod, current_R, current_N, g_rates, s_list, abundances
 
 
 #----------------------------------------------------------------------------------------------------
@@ -460,3 +567,4 @@ def change_grid_N(N, m):
                 new_N[i, j] = N[center_i, center_j]
     
     return new_N
+

@@ -14,6 +14,7 @@ CONTAINS: - SOR_2D: a Dirichlet BC setting where a frame of the grid has fixed c
 """
 
 import numpy as np
+import numba
 
 from time import time
 

@@ -55,6 +55,7 @@ m: [0. 0. 0. 0. 0. 0. 0. 0.]
 ext: [10.  0.  0.  0.  0.  0.  0.  0.]
 tau: [ 1. inf inf inf inf inf inf inf]
 tau_s: 1.0
+bb: 2
 n: 100
 sor: 1.55
 L: 40
