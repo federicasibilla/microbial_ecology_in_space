@@ -385,7 +385,8 @@ def vis_wm(N, R, exe):
     for i in range(N.shape[1]):
         axs[0].plot(N[:, i], label=f'Species {i+1}', color=colors[i], linewidth=1)
 
-    axs[0].legend()
+    # Move the legend outside the plot
+    axs[0].legend(loc='upper left', bbox_to_anchor=(1, 1), frameon=False)
     axs[0].grid(True)
 
     # Fractional abundances
@@ -394,16 +395,17 @@ def vis_wm(N, R, exe):
     axs[1].set_ylabel("Fraction of Total Population")
 
     total_population = np.sum(N, axis=1, keepdims=True)
-    fractional_abundance = np.divide(N, total_population, where=total_population!=0)
+    fractional_abundance = np.divide(N, total_population, where=total_population != 0)
 
     for i in range(N.shape[1]):
         axs[1].plot(fractional_abundance[:, i], label=f'Species {i+1}', color=colors[i], linewidth=1)
 
-    axs[1].legend()
+    # Move the legend outside the plot
+    axs[1].legend(loc='upper left', bbox_to_anchor=(1, 1), frameon=False)
     axs[1].grid(True)
 
     plt.tight_layout()
-    plt.savefig(plot_path)
+    plt.savefig(plot_path, bbox_inches='tight')  # Ensure everything fits into the saved image
     plt.close()
 
     # Plot Time Series for Resources
@@ -415,10 +417,11 @@ def vis_wm(N, R, exe):
     for i in range(R.shape[1]):
         plt.plot(R[:, i], label=f'Resource {i+1}', color=colors[i], linewidth=1)
 
-    plt.legend()
+    # Move the legend outside the plot
+    plt.legend(loc='upper left', bbox_to_anchor=(1, 1), frameon=False)
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(plot_path_R)
+    plt.savefig(plot_path_R, bbox_inches='tight')  # Ensure everything fits into the saved image
     plt.close()
 
     return
