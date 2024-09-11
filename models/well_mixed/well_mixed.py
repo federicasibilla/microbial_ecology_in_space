@@ -3,7 +3,6 @@ well_mixed.py: file to store definition of the well-mixed model
 
 CONTAINS: - dR_dt: function storing the dynamics of resources
           - dR_dt_maslov: function with reinsertion in environment
-          - dR_dt_partial: resource dynamics with partial modulation
           - dR_dt_linear: function storing the dynamics of resources, when linear
           - dR_dt_nomod: function with R dynamics with uptake not regulated by auxotrophies
           - dN_dt: function storing the dynamics of species
@@ -47,7 +46,7 @@ def dR_dt(R,N,param,mat):
     out = np.dot((up_eff*R/(1+R)).T,N.T)
 
     # species specific metabolism and renormalization
-    D_species = np.tile(mat['met'].T,(n_s,1,1))*(np.tile(mat['spec_met'],(1,1,n_r)).reshape(n_s,n_r,n_r)) 
+    D_species = np.tile(mat['met'],(n_s,1,1))*np.transpose((np.tile(mat['spec_met'],(1,1,n_r)).reshape(n_s,n_r,n_r)),axes=(0,2,1))
     D_s_norma = np.zeros((n_s,n_r,n_r))
     for i in range(n_s):
         sums = np.sum(D_species[i], axis=0)
@@ -86,7 +85,7 @@ def dR_dt_maslov(R,N,param,mat):
     prod = np.zeros((n_r))
     
     # species specific metabolism and renormalization
-    D_species = np.tile(mat['met'],(n_s,1,1))*(np.tile(mat['spec_met'],(1,1,n_r)).reshape(n_s,n_r,n_r)) 
+    D_species = np.tile(mat['met'],(n_s,1,1))*np.transpose((np.tile(mat['spec_met'],(1,1,n_r)).reshape(n_s,n_r,n_r)),axes=(0,2,1))
     D_s_norma = np.zeros((n_s,n_r,n_r))
     for i in range(n_s):
         sums = np.sum(D_species[i], axis=0)
@@ -96,15 +95,14 @@ def dR_dt_maslov(R,N,param,mat):
     for i in range(n_s):
         # calculate essential nutrients modulation for each species (context-dependent uptake)
         if (np.sum(mat['ess'][i]!=0)):
-            print('i')
             mu  = np.min(R[mat['ess'][i]==1]/(R[mat['ess'][i]==1]+1))
             lim = np.where(mat['ess'][i] == 1)[np.argmin(R[mat['ess'][i]==1]/(R[mat['ess'][i]==1]+1))]
             l_eff=param['l'].copy()*mu + (1-mu)     # modulate uptakes 
+            l_eff[lim]=param['l'].copy()[lim]
             l_eff[lim]=param['l'][lim].copy()     # restore uptake of the limiting one to max
             prod += np.dot(N[i]*mat['uptake'][i]*R/(1+R)*param['w']*l_eff,(D_s_norma[i].T))*1/param['w']
         else:
             prod += np.dot(N[i]*mat['uptake'][i]*R/(1+R)*param['w']*param['l'],(D_s_norma[i].T))*1/param['w']
-
 
     # resource loss due to uptake (not modulated by essentials)
     out = np.dot((mat['uptake']*R/(1+R)).T,N.T)
@@ -147,11 +145,12 @@ def dR_dt_partial(R,N,param,mat):
             up_eff[i]=mat['uptake'][i]*(param['alpha']+(1-param['alpha'])*mu)      # modulate uptakes only partially
             up_eff[i,lim]=mat['uptake'][i,lim]                                     # restore uptake of the limiting one to max
 
+
     # resource loss due to uptake (not modulated by essentials)
     out = np.dot((up_eff*R/(1+R)).T,N.T)
 
     # species specific metabolism and renormalization
-    D_species = np.tile(mat['met'],(n_s,1,1))*(np.tile(mat['spec_met'],(1,1,n_r)).reshape(n_s,n_r,n_r)) 
+    D_species = np.tile(mat['met'],(n_s,1,1))*np.transpose((np.tile(mat['spec_met'],(1,1,n_r)).reshape(n_s,n_r,n_r)),axes=(0,2,1))
     D_s_norma = np.zeros((n_s,n_r,n_r))
     for i in range(n_s):
         sums = np.sum(D_species[i], axis=0)
@@ -198,7 +197,7 @@ def dR_dt_nomod(R,N,param,mat):
     out[np.abs(out)<1e-14]=0
 
     # species specific metabolism and renormalization
-    D_species = np.tile(mat['met'],(n_s,1,1))*(np.tile(mat['spec_met'],(1,1,n_r)).reshape(n_s,n_r,n_r)) 
+    D_species = np.tile(mat['met'],(n_s,1,1))*np.transpose((np.tile(mat['spec_met'],(1,1,n_r)).reshape(n_s,n_r,n_r)),axes=(0,2,1))
     D_s_norma = np.zeros((n_s,n_r,n_r))
     for i in range(n_s):
         sums = np.sum(D_species[i], axis=0)
@@ -340,40 +339,6 @@ def dN_dt_linear(t,N,R,param,mat):
 
     return dNdt
 
-#--------------------------------------------------------------------------------------------------
-# define species dynamics
-
-def dN_dt_partial(t,N,R,param,mat):
-
-    """
-    R: vector, n_r, current resource concentration
-    N: vecotr, n_s, current species abundance
-    param, mat: dictionaries, parameters and matrice
-
-    RETURNS N*(growth_vector-1/param['tau_s']), vector, n_s, the new state of species, n_s
-
-    """
-    
-    n_s = N.shape[0]
-
-    # check essential nutrients presence (at each site)
-    up_eff = mat['uptake'].copy()
-    for i in range(n_s):
-        # calculate essential nutrients modulation for each species (context-dependent uptake)
-        if (np.sum(mat['ess'][i]!=0)):
-            mu  = np.min(R[mat['ess'][i]==1]/(R[mat['ess'][i]==1]+1))
-            lim = np.where(mat['ess'][i] == 1)[np.argmin(R[mat['ess'][i]==1]/(R[mat['ess'][i]==1]+1))]
-            up_eff[i]=mat['uptake'][i]*(mu*(1-param['alpha'])+param['alpha'])      # modulate uptakes 
-            up_eff[i,lim]=mat['uptake'][i,lim] # restore uptake of the limiting one to max
-
-    # effect of resources
-    growth_vector = param['g']*(np.sum(param['w']*(1-param['l'])*up_eff*mat['sign']*R/(1+R),axis=1)) 
-
-    # sum (remember to take dilution away if no species chemostat)
-    dNdt = N*(growth_vector-param['m'])
-    dNdt[np.abs(dNdt)<1e-10]=0
-
-    return dNdt
 
 #--------------------------------------------------------------------------------------------------
 # define species dynamics when linear 
@@ -452,7 +417,7 @@ def run_wellmixed(N0,param,mat,dR,dN,maxiter):
         #if (np.abs(drdt)<1e-14).all():
             #R_eq = R[-1]
         #else:
-        R_eq = optimize.least_squares(dR, guess, args=(N_prev,param,mat)).x
+        R_eq = optimize.least_squares(dR, guess, args=(N_prev,param,mat),bounds = (0,np.inf)).x
         R_eq[np.abs(R_eq)<1e-14]=0
 
         # integrate N one step

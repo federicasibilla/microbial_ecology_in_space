@@ -37,7 +37,7 @@ m = np.zeros((n_s))+0.1
 
 # no reinsertion of produced chemicals
 ext = np.zeros((n_r))
-ext[0] = 1.
+ext[0] = 10.
 tau = np.zeros((n_r))+10
 
 g = np.array([0.5,1.])
@@ -55,8 +55,9 @@ param = {
     'm'  : m,                                          # maintainance requ.    [energy/time]
     'ext': ext,                                        # external replenishment  
     'tau' : tau,                                       # chemicals dilution                             
-    'tau_s': 100,                                      # species dilution
-    'guess_wm': guess                                  # initial resources guess
+    #'tau_s': 0.1,                                      # species dilution
+    'guess_wm': guess,                                 # initial resources guess
+    'alpha': 0.2                                       # partial modulation parameter                      
 }
 
 # define matrices dict
@@ -68,7 +69,7 @@ mat = {
     'sign'    : sign_mat
 }
 
-N_fin,R_fin=run_wellmixed(N0,param,mat,dR_dt_maslov,dN_dt_maslov,20000)
+N_fin,R_fin=run_wellmixed(N0,param,mat,dR_dt_partial,dN_dt,2000)
 
 sums = np.sum(N_fin, axis=1)[-1]
 final_fraction = np.where(sums == 0, 0, N_fin[-1] / (sums+1e-15))
