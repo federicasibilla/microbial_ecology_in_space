@@ -110,3 +110,17 @@ def calculate_C(C_matrix):
     """
 
     return np.mean(np.dot(C_matrix,C_matrix.T))
+
+#------------------------------------------------------------------------------------------------------------------------------
+# calculate_C: function to quantify competition in a network
+
+def calculate_F(D_matrix,C_matrix):
+
+    """
+    C_matrix: matrix, n_sxn_r, uptake matrix
+
+    RETURNS C: float, value quantifying competition in a network
+    """
+
+
+    return np.mean(np.dot(C_matrix,np.dot(D_matrix,C_matrix.T)))
